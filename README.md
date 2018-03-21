@@ -1,10 +1,10 @@
 # API-RESTful-PHP
 API RESTful with PDO
 
-## ATTENTION:
+## ATTENTION
 Rename the file `a.htaccess` to `.htaccess`
 
-## USE:
+## USE
 This API works with a friendly URLs
 
 ### GET
