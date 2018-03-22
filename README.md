@@ -1,6 +1,4 @@
 # API-RESTful-PHP
-API RESTful made with PDO works with a friendly URLs
-
 :warning: ATTENTION: Rename the file `a.htaccess` to `.htaccess`
 
 ### GET
