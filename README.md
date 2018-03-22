@@ -8,22 +8,22 @@ https://server/api/books
 ```
 Get specific book: 
 ```
-https://server/api/books/5
+https://server/books/5
 ```
 ### POST
 Insert a book: 
 ```
-https://server/api/books
+https://server/books
 ```
 
 ### PUT
 Update a book: 
 ```
-https://server/api/books/5
+https://server/books/5
 ```
 
 ### DELETE
 Delete a book: 
 ```
-https://server/api/books/5
+https://server/books/5
 ```
