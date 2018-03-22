@@ -1,11 +1,7 @@
 # API-RESTful-PHP
-API RESTful with PDO
+API RESTful made with PDO works with a friendly URLs
 
-## ATTENTION
-Rename the file `a.htaccess` to `.htaccess`
-
-## USE
-This API works with a friendly URLs
+:warning: ATTENTION: Rename the file `a.htaccess` to `.htaccess`
 
 ### GET
 Get all bookts: 
