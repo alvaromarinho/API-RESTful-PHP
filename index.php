@@ -1,35 +1,41 @@
 <?php
 
-// error_reporting(E_ALL);
-// ini_set("display_errors", 1);
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-header("Content-type: application/json; charset=utf-8");
+header('Content-type: application/json; charset=utf-8');
 setlocale(LC_TIME, 'pt_BR', 'pt_BR.utf-8', 'pt_BR.utf-8', 'portuguese');
 date_default_timezone_set('America/Sao_Paulo');
 
-$_files = array_slice(scandir('resource'), 2);
-$_class = array_map(function($n){ return substr($n, 0, -4); }, $_files);
+require_once 'vendor/Connection.php';
+require_once 'vendor/Resources.php';
+require_once 'vendor/Route.php';
+require_once 'vendor/Auth.php';
 
+$_route = new Route();
+
+/* Import resources from version */
+$_files = array_slice(scandir($_route->getVersion()), 2);
 foreach ($_files as $file)
-	require_once "resource/".$file;
+	require_once $_route->getVersion() . '/' . $file;
 
-$_uri = $_SERVER['REQUEST_URI'];
-$_uri = explode("/", trim($_uri, "/"));
+$_class = array_map(function ($n) {
+	return substr($n, 0, -4);
+}, $_files);
 
-$_resource   = isset($_uri[0]) ? ucfirst($_uri[0]) : null;
-$_parameters = isset($_uri[1]) ? $_uri[1] : null;
-
-if(in_array($_uri[0], $_class))
-	if($_resource) {
-		if($_SERVER['REQUEST_METHOD'] == 'POST')
-			echo json_encode($_resource::create());
-		else if($_SERVER['REQUEST_METHOD'] == 'GET')
-			echo json_encode($_resource::read($_parameters));
-		else if($_SERVER['REQUEST_METHOD'] == 'PUT')
-			echo json_encode($_resource::update($_parameters));
-		else if($_SERVER['REQUEST_METHOD'] == 'DELETE')
-			echo json_encode($_resource::delete($_parameters));
-	} else
-		http_response_code(404);
-else 
-	echo json_encode("API RESTful PHP by Alvaro Marinho - alvaromarinho.com.br");
+if ($_route->getResource() == 'crypt')
+	die(Resources::response(200, 'OK', Auth::crypt($_route->getArgs())));
+if ($_route->getResource() == 'auth')
+	die(Resources::response(200, 'OK', Auth::token($_POST)));
+if (!in_array($_route->getResource(), $_class))
+	die(Resources::response(404, 'Resource not found.'));
+if (!Auth::login(getallheaders()))
+	die(Resources::response(401, 'Unauthorized.'));
+if ($_SERVER['REQUEST_METHOD'] == 'POST')
+	echo json_encode($_route->getResource()::create());
+else if ($_SERVER['REQUEST_METHOD'] == 'GET')
+	die(Resources::response(200, 'OK', $_route->getResource()::read($_route->getArgs())));
+else if ($_SERVER['REQUEST_METHOD'] == 'PUT')
+	die(Resources::response(200, 'OK', $_route->getResource()::update($_route->getArgs())));
+else if ($_SERVER['REQUEST_METHOD'] == 'DELETE')
+	die(Resources::response(200, 'OK', $_route->getResource()::delete($_route->getArgs())));
