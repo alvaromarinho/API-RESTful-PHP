@@ -1,39 +1,45 @@
 # API-RESTful-PHP
 :warning: ATTENTION: Rename the file `a.htaccess` to `.htaccess`
 
+### To generate API
+```
+https://server/api/maker
+```
+
 ### GET
 Get all bookts: 
 ```
-https://server/api/books
+https://server/api/version/books
 ```
 Get specific book: 
 ```
-https://server/api/books/5
+https://server/api/version/books/5
 ```
+
 ### POST
 Insert a book: 
 ```
-https://server/api/books
+https://server/api/version/books
 ```
 
 ### PUT
 Update a book: 
 ```
-https://server/api/books/5
+https://server/api/version/books/5
 ```
 
 ### DELETE
 Delete a book: 
 ```
-https://server/api/books/5
+https://server/api/version/books/5
 ```
 
 ### Encrypting 'password' for authentication
 ```
-https://server/api/crypt/password
+https://server/api/version/crypt/password
 ```
 
 ### Requesting authentication Token
 ```
-https://server/api/auth
+https://server/api/version/auth
 ```
