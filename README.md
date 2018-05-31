@@ -28,12 +28,12 @@ Delete a book:
 https://server/api/books/5
 ```
 
-### ENCRYPTING 'password' FOR AUTHENTICATION
+### Encrypting 'password' for authentication
 ```
 https://server/api/crypt/password
 ```
 
-### REQUESTING AUTHENTICATION TOKEN
+### Requesting authentication Token
 ```
 https://server/api/auth
 ```
