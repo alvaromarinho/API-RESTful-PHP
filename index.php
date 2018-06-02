@@ -1,7 +1,7 @@
 <?php
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// error_reporting(E_ALL);
+// ini_set('display_errors', 1);
 
 header('Content-type: application/json; charset=utf-8');
 setlocale(LC_TIME, 'pt_BR', 'pt_BR.utf-8', 'pt_BR.utf-8', 'portuguese');

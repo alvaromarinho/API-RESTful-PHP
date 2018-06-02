@@ -13,9 +13,9 @@ class Auth
 
     public static function login($array)
     {
-        if (array_key_exists('AuthToken', $array)) {
+        if (array_key_exists('Authtoken', $array)) {
             try {
-                JWT::decode($array['AuthToken'], self::$key, array('HS512'));
+                JWT::decode($array['Authtoken'], self::$key, array('HS512'));
                 return true;
             } catch (Exception $e) {
                 die(Resources::response(401, 'Wrong token.'));
@@ -41,7 +41,7 @@ class Auth
                 "exp" => time() + 60 * 60,        // time when the token was expired	
                 "iss" => $_SERVER['SERVER_NAME'],	// A string containing the name or identifier of the application
             );
-            return ['AuthToken' => JWT::encode($config, self::$key, 'HS512')];
+            return ['Authtoken' => JWT::encode($config, self::$key, 'HS512')];
         } else
             die(Resources::response(401, 'Wrong username or password.'));
     }
