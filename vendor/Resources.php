@@ -40,10 +40,10 @@ class Resources
 	public static function response(string $code, string $message, array $data = [])
 	{
 		$status = [1 => 'info', 2 => 'success', 3 => 'redirect', 4 => 'error', 5 => 'error'];
+		header('url:'.$_SERVER['REQUEST_URI']);
+		header('HTTP/1.1 '.$code);
 		return json_encode([
-			'url' => $_SERVER['REQUEST_URI'],
 			'status' => $status[$code[0]],
-			'code' => $code,
 			'message' => $message,
 			'data' => $data
 		]);
