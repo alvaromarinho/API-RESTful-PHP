@@ -32,7 +32,7 @@ if (!in_array($_route->getResource(), $_class))
 if (!Auth::login(getallheaders()))
 	die(Resources::response(401, 'Unauthorized.'));
 if ($_SERVER['REQUEST_METHOD'] == 'POST')
-	echo json_encode($_route->getResource()::create());
+	die(Resources::response(200, 'OK', $_route->getResource()::create($_route->getArgs())));
 else if ($_SERVER['REQUEST_METHOD'] == 'GET')
 	die(Resources::response(200, 'OK', $_route->getResource()::read($_route->getArgs())));
 else if ($_SERVER['REQUEST_METHOD'] == 'PUT')
