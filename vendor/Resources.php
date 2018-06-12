@@ -62,7 +62,7 @@ class Resources
 
 		if (is_array($args)) {
 			if (array_key_exists('fields', $args))
-				$fields = $args['fields'];
+				$fields = str_replace(['+'], [" "], $args['fields']);
 			if (array_key_exists('group', $args))
 				$group = ' GROUP BY ' . $args['group'];
 			if (array_key_exists('order', $args))
@@ -73,13 +73,12 @@ class Resources
 				$offset = ' OFFSET ' . $args['offset'];
 			if (array_key_exists('id', $args))
 				$id = ' id = ' . $args['id'];
-			if (array_key_exists('filter', $args)) {
+			if (array_key_exists('filter', $args))
 				$filter = str_replace(
-					[':', ';', ',', '*', '[]'],
-					["=", "!=", " AND ", " OR ", " BETWEEN "],
+					[':', '!:', ',', ';', '[]', '@', '*', '+'],
+					["=", "!=", " AND ", " OR ", " BETWEEN ", " LIKE ", "%", " "],
 					$args['filter']
 				);
-			}
 		} elseif (!empty($args))
 			$id = ' id = ' . $args;
 
