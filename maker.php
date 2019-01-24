@@ -92,8 +92,8 @@ $tables = $stmt->fetchAll();
 		</footer>
 
 		<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
+		<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
 	</body>
 </html>
 
@@ -118,11 +118,7 @@ if (!empty($_POST)) {
 		$default = array();
 		$fields = array();
 
-		$sql = "SELECT 
-						column_name     AS 'field', 
-						column_default  AS 'default'
-					FROM information_schema.columns 
-					WHERE table_name = '" . $table . "' AND table_schema = SCHEMA()";
+		$sql = "SELECT column_name AS 'field', column_default  AS 'default' FROM information_schema.columns WHERE table_name = '" . $table . "' AND table_schema = SCHEMA()";
 		$stmt = Connection::prepare($sql);
 		$stmt->execute();
 		$describe = $stmt->fetchAll();
@@ -130,7 +126,7 @@ if (!empty($_POST)) {
 		foreach ($describe as $d) {
 			$fields[] = $d->field;
 			if (!empty($d->default))
-				$default[$d->field] = ($d->default == "CURRENT_TIMESTAMP") ? "date('Y-m-d H:i:s')" : $d->default;
+				$default[$d->field] = ($d->default == "CURRENT_TIMESTAMP") ? "date('Y-m-d H:i:s')" : "'".$d->default."'";
 		}
 
 		// CREATE
@@ -138,25 +134,39 @@ if (!empty($_POST)) {
 		if (!empty($default))
 			foreach ($default as $key => $value)
 				$html .= "\$_POST['" . $key . "'] = isset(\$_POST['" . $key . "']) ? \$_POST['" . $key . "'] : " . $value . ";\n\t\t";
-		$html .= "\n\t\t\$fields = array_keys(\$_POST);\n\t\t\$values = str_repeat('?,', count(\$fields));\n\t\t\$sql = 'INSERT INTO " . $table . " ('.implode(', ', \$fields).') VALUES ('.substr(\$values, 0, -1).')';\n\t\t\$stmt = Connection::prepare(\$sql);\n\t\tforeach (\$fields as \$key => \$value)\n\t\t\t\$stmt->bindParam(\$key+1, \$_POST[\$value]);\n\t\ttry {\n\t\t\t\$stmt->execute();\n\t\t} catch (PDOException \$e) {\n\t\t\tdie(Resources::response(500, \$e->getMessage()));\n\t\t}\n\t\treturn self::read(['id' => Connection::lastInsertId()]);\n\t}\n\n\t";
+		$html .= "\$fields = array_keys(\$_POST);\n\t\t\$values = str_repeat('?,', count(\$fields));\n\t\t\$sql = 'INSERT INTO " . $table . " ('.implode(', ', \$fields).') VALUES ('.substr(\$values, 0, -1).')';\n\t\t\$stmt = Connection::prepare(\$sql);\n\t\tforeach (\$fields as \$key => \$value)\n\t\t\t\$stmt->bindParam(\$key+1, \$_POST[\$value]);\n\t\ttry {\n\t\t\t\$stmt->execute();\n\t\t} catch (PDOException \$e) {\n\t\t\tdie(Utils::response(500, \$e->getMessage()));\n\t\t}\n\t\treturn self::read(['id' => Connection::lastInsertId()]);\n\t}\n\n\t";
 
 		// READ
-		$html .= "public static function read(\$args = null)\n\t{\n\t\t\$sql = Resources::mountSql(\$args, '" . $table . "');\n\t\t\$stmt = Connection::prepare(\$sql);\n\t\ttry {\n\t\t\t\$stmt->execute();\n\t\t} catch (PDOException \$e) {\n\t\t\tdie(Resources::response(500, \$e->getMessage()));\n\t\t}\n\t\treturn \$stmt->fetchAll();\n\t}\n\n\t";
+		$html .= "public static function read(\$args = null)\n\t{\n\t\t\$sql = Utils::mountSql(\$args, '" . $table . "');\n\t\t\$stmt = Connection::prepare(\$sql);\n\t\ttry {\n\t\t\t\$stmt->execute();\n\t\t} catch (PDOException \$e) {\n\t\t\tdie(Utils::response(500, \$e->getMessage()));\n\t\t}\n\t\treturn \$stmt->fetchAll();\n\t}\n\n\t";
 
 		// UPDATE
-		$html .= "public static function update()\n\t{\n\t\t\$_PUT = Resources::parseRawHttpRequest();\n\t\t\$id = \$_PUT['id'];\n\t\tunset(\$_PUT['id']);\n\t\t\$fields = array_keys(\$_PUT);\n\t\tif (empty(\$fields))\n\t\t\tdie(Resources::response(500, 'No data to update.'));\n\t\t\$sql = 'UPDATE " . $table . " SET '.implode(' = ?, ', \$fields).' = ? WHERE id = '.\$id;\n\t\t\$stmt = Connection::prepare(\$sql);\n\t\tforeach (\$fields as \$key => \$value)\n\t\t\t\$stmt->bindParam(\$key+1, \$_PUT[\$value]);\n\t\ttry {\n\t\t\t\$stmt->execute();\n\t\t} catch (PDOException \$e) {\n\t\t\tdie(Resources::response(500, \$e->getMessage()));\n\t\t}\n\t\treturn self::read(['id' => \$id]);\n\t}\n\n\t";
+		$html .= "public static function update(\$id)\n\t{\n\t\tif (!\$id)\n\t\t\tdie(Utils::response(400, 'No ID to update.'));\n\t\t\$_PUT = Utils::parseRawHttpRequest();\n\t\t\$fields = array_keys(\$_PUT);\n\t\tif (empty(\$fields))\n\t\t\tdie(Utils::response(500, 'No data to update.'));\n\t\t\$sql = 'UPDATE " . $table . " SET '.implode(' = ?, ', \$fields).' = ? WHERE id = '.\$id;\n\t\t\$stmt = Connection::prepare(\$sql);\n\t\tforeach (\$fields as \$key => \$value)\n\t\t\t\$stmt->bindParam(\$key+1, \$_PUT[\$value]);\n\t\ttry {\n\t\t\t\$stmt->execute();\n\t\t} catch (PDOException \$e) {\n\t\t\tdie(Utils::response(500, \$e->getMessage()));\n\t\t}\n\t\treturn self::read(['id' => \$id]);\n\t}\n\n\t";
 
 		// DELETE
-		$html .= "public static function delete(\$id)\n\t{\n\t\t\$sql = 'DELETE FROM " . $table . " WHERE id = '.\$id;\n\t\t\$stmt = Connection::prepare(\$sql);\n\t\ttry {\n\t\t\t\$stmt->execute();\n\t\t} catch (PDOException \$e) {\n\t\t\tdie(Resources::response(500, \$e->getMessage()));\n\t\t}\n\t\treturn [];\n\t}\n";
+		$html .= "public static function delete(\$id)\n\t{\n\t\tif (!\$id)\n\t\t\tdie(Utils::response(400, 'No ID to delete.'));\n\t\t\$sql = 'DELETE FROM " . $table . " WHERE id = '.\$id;\n\t\t\$stmt = Connection::prepare(\$sql);\n\t\ttry {\n\t\t\t\$stmt->execute();\n\t\t} catch (PDOException \$e) {\n\t\t\tdie(Utils::response(500, \$e->getMessage()));\n\t\t}\n\t\treturn [];\n\t}\n";
 
 		$html .= "}\n";
 
+		// VERSION FOLDER
 		$path = 'v' . $_POST['version'] . DS;
 		if (!is_dir($path))
 			mkdir($path);
 
-		file_put_contents($path . $table . '.php', $html);
-		chmod($path . $table . '.php', 0777);
+		// DAO FOLDER
+		if (!is_dir($path . 'dao' . DS))
+			mkdir($path . 'dao' . DS);
+
+		file_put_contents($path . 'dao' . DS . $table . 'DAO.php', $html);
+		chmod($path . 'dao' . DS . $table . 'DAO.php', 0777);
+
+		// RESOURCE FOLDER
+		if (!is_dir($path . 'resource' . DS))
+			mkdir($path . 'resource' . DS);
+
+		$htmlR = "<?php\n\nrequire_once \$_route->getVersion() . '/dao/".$table."DAO.php';\n\nswitch (\$_SERVER['REQUEST_METHOD']) {\n\tcase 'POST':\n\t\tdie(Utils::response(200, 'OK', \$_route->getResource()::create()));\n\tcase 'GET':\n\t\tdie(Utils::response(200, 'OK', \$_route->getResource()::read(\$_route)));\n\tcase 'PUT':\n\t\tdie(Utils::response(200, 'OK', \$_route->getResource()::update(\$_route->getEntity())));\n\tcase 'DELETE':\n\t\tdie(Utils::response(200, 'OK', \$_route->getResource()::delete(\$_route->getEntity())));\n}\n";
+
+		file_put_contents($path . 'resource' . DS . $table . 'Resource.php', $htmlR);
+		chmod($path . 'resource' . DS . $table . 'Resource.php', 0777);
 	}
 
 	echo "<script>alert('Maker executed successfully!')</script>";

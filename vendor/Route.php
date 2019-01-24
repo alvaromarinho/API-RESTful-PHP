@@ -1,75 +1,76 @@
-<?php 
+<?php
 
 class Route
 {
-    private static $_args;
-    private static $_version;
-    private static $_resource;
+    private $_uri;
+    private $_version;
+    private $_resource;
+    private $_entity;
+    private $_queryParams;
 
     public function __construct()
     {
-        $uri = explode('/', trim(substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], '/api/')), '/'));
+        $_requestUri = trim(substr($_SERVER['REQUEST_URI'], strpos($_SERVER['REQUEST_URI'], '/api/')), '/');
 
-        if (isset($uri[1]))
-            self::$_version = $uri[1];
-        else
-            die(Resources::response(400, 'Version not specified.'));
-
-        if (isset($uri[2]))
-            self::$_resource = $uri[2];
-        else
-            die(Resources::response(400, 'Resource not specified.'));
-
-        if (isset($uri[4]) && $_SERVER['REQUEST_METHOD'] == 'GET')
-            self::$_args = isset($uri[3]) ? self::setArgs($uri[4], $uri[3]) : null;
-        else
-            self::$_args = isset($uri[3]) ? self::setArgs($uri[3]) : null;
-
-    }
-    /**
-     * STATIC: FIELDS, ORDER, R_ORDER, GROUP, LIMIT, OFFSET
-     */
-    private function setArgs($string, $id = null)
-    {
-        $statics = ['fields', 'filter', 'order', 'group', 'limit', 'offset'];
-
-        if (strstr($string, '&')) {
-            $array = explode("&", $string);
-            foreach ($array as $parameter) {
-                $values = explode("=", $parameter);
-                $args[reset($values)] = end($values);
+        if (strstr($_requestUri, '?')) {
+            $_requestUriArray = explode('?', $_requestUri);
+            $_queryParamsString = end($_requestUriArray);
+            $_queryParams = explode('&', $_queryParamsString);
+            foreach ($_queryParams as $q) {
+                $_qp = explode('=', $q);
+                $this->_queryParams[reset($_qp)] = end($_qp);
             }
-        } else if (strstr($string, '=')) {
-            $array = explode("=", $string);
-            $args = [reset($array) => end($array)];
-        } else
-            return $string;
-
-        foreach ($statics as $static) {
-            if (array_key_exists($static, $args)) {
-                $result[$static] = $args[$static];
-                unset($args[$static]);
-            }
+            $_requestUri = reset($_requestUriArray);
         }
 
-        if ($id)
-            $result['id'] = $id;
+        $this->_uri = $_requestUri;
+        $_uri = explode('/', $_requestUri);
 
-        return $result;
+        if (isset($_uri[1])) {
+            $this->_version = $_uri[1];
+        } else {
+            die(Resources::response(400, 'Version not specified.'));
+        }
+
+        if (isset($_uri[2])) {
+            $this->_resource = $_uri[2];
+        } else {
+            die(Resources::response(400, 'Resource not specified.'));
+        }
+
+        if (isset($_uri[3])) {
+            $this->_entity = $_uri[3];
+        }
     }
 
-    public function getArgs()
+    public function getUri()
     {
-        return self::$_args;
+        return $this->_uri;
     }
 
     public function getVersion()
     {
-        return self::$_version;
+        return $this->_version;
     }
 
     public function getResource()
     {
-        return self::$_resource;
+        return $this->_resource;
     }
+
+    public function getEntity()
+    {
+        return $this->_entity;
+    }
+
+    public function getQueryParams()
+    {
+        return $this->_queryParams;
+    }
+
+    public function unsetQueryParams($param)
+    {
+        unset($this->_queryParams[$param]);
+    }
+
 }

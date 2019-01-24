@@ -11,14 +11,21 @@ class Auth
 {
     private static $key = "SUA_KEY";
 
-    public static function login($array)
+    public static function login($array, $_access)
     {
-        if (array_key_exists('Authtoken', $array)) {
+        if (array_key_exists('Authorization', $array)) {
             try {
-                JWT::decode($array['Authtoken'], self::$key, array('HS512'));
+                $decode = JWT::decode($array['Authorization'], self::$key, array('HS512'));
+                if (!in_array($decode->data->role, $_access->getRole())) {
+                    throw new Exception("Forbidden", 403);
+                }
                 return true;
+            } catch (SignatureInvalidException $e) {
+                die(Utils::response(500, $e->getMessage()));
+            } catch (ExpiredException $e) {
+                die(Utils::response(400, $e->getMessage()));
             } catch (Exception $e) {
-                die(Resources::response(401, 'Wrong token.'));
+                die(Utils::response($e->getCode(), $e->getMessage()));
             }
         }
         return false;
@@ -26,24 +33,28 @@ class Auth
 
     public static function token($array)
     {
-        $sql = 'SELECT password FROM users WHERE username = ?';
+        $sql = 'SELECT id, password, role FROM users WHERE username = ?';
         $stmt = Connection::prepare($sql);
         $stmt->bindParam(1, $array['username']);
         try {
             $stmt->execute();
         } catch (PDOException $e) {
-            die(Resources::response(500, $e->getMessage()));
+            die(Utils::response(500, $e->getMessage()));
         }
-        $pass = $stmt->fetch()->password;
+        $fetch = $stmt->fetch();
+        $pass = $fetch->password;
         if ($pass && crypt($array['password'], $pass) == $pass) {
             $config = array(
-                "iat" => time(), 					// time when the token was generated
-                "exp" => time() + 60 * 60,        // time when the token was expired	
-                "iss" => $_SERVER['SERVER_NAME'],	// A string containing the name or identifier of the application
+                'iat' => time(), // time when the token was generated
+                'exp' => time() + 60 * 60, // time when the token was expired
+                'iss' => $_SERVER['SERVER_NAME'], // A string containing the name or identifier of the application
+                'data' => ['id' => $fetch->id, 'role' => $fetch->role],
             );
-            return ['Authtoken' => JWT::encode($config, self::$key, 'HS512')];
-        } else
-            die(Resources::response(401, 'Wrong username or password.'));
+            return ['Authorization' => JWT::encode($config, self::$key, 'HS512')];
+        } else {
+            die(Utils::response(401, 'Wrong username or password.'));
+        }
+
     }
 
     public static function crypt($password)
