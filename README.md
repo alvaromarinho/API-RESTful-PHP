@@ -34,11 +34,6 @@ Delete a book:
 https://server/api/version/books/5
 ```
 
-### Encrypting 'password' for authentication
-```
-https://server/api/version/crypt/password
-```
-
 ### Requesting authentication Token
 ```
 https://server/api/version/auth
